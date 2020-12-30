@@ -18,4 +18,5 @@ public struct KeyWindowValue<Key: KeyWindowValueKey>: DynamicProperty {
     }
 
     public init(_ key: Key.Type) {}
+    public init() where Key == Key.Value {}
 }

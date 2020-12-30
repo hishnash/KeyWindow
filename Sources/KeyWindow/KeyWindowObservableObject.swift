@@ -21,6 +21,10 @@ public struct KeyWindowObservableObject<Key: KeyWindowObservableObjectKey>: Dyna
         self.wrappedValue = KeyWindowState.shared[Key.self] ?? Key.defaultValue
     }
     
+    public init() where Key == Key.Value {
+        self.wrappedValue = KeyWindowState.shared[Key.self] ?? Key.defaultValue
+    }
+    
     mutating public func update() {
         self._keyWindowState.update()
         self.wrappedValue = KeyWindowState.shared[Key.self] ?? Key.defaultValue

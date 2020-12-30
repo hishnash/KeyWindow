@@ -17,4 +17,16 @@ public extension View {
             existingValue[key] = value
         }
     }
+    
+    func keyWindow<Value>(_ value: Value) -> some View where Value: KeyWindowValueKey, Value.Value == Value {
+        self.transformPreference(KeyWindowValuesPreference.self) { existingValue in
+            existingValue[Value.self] = value
+        }
+    }
+    
+    func keyWindow<Value>(_ value: Binding<Value>) -> some View where Value: KeyWindowValueKey, Value.Value == Binding<Value> {
+        self.transformPreference(KeyWindowValuesPreference.self) { existingValue in
+            existingValue[Value.self] = value
+        }
+    }
 }

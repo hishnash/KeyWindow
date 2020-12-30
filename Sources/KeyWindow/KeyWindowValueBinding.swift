@@ -7,11 +7,14 @@
 
 import SwiftUI
 
+
 @propertyWrapper
 public struct KeyWindowValueBinding<Key: KeyWindowValueKey, Value>: DynamicProperty where Key.Value == Binding<Value> {
 
     public init(_ key: Key.Type) {}
-
+    
+    public init() where Key == Value {}
+    
     // The`@ObservedObject` object needs to be set on a value type
     @ObservedObject
     var keyWindowState: KeyWindowState = KeyWindowState.shared
