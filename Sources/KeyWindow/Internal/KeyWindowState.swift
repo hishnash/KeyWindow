@@ -10,6 +10,8 @@ import SwiftUI
 internal class KeyWindowState: ObservableObject {
     @Published
     var values = KeyWindowValuesPreference()
+    
+    weak var window: Window?
 
     init () {}
     
@@ -18,4 +20,17 @@ internal class KeyWindowState: ObservableObject {
     }
     
     static var shared: KeyWindowState = KeyWindowState()
+    
+    internal func didBecomeKey(window: Window, values: KeyWindowValuesPreference) {
+        self.window = window
+        self.values = values
+    }
+
+    internal func didResignKey(window: Window) {
+        guard window === self.window else {
+            return
+        }
+        self.window = nil
+        self.values = KeyWindowValuesPreference()
+    }
 }

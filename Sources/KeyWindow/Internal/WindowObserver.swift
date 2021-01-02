@@ -20,10 +20,12 @@ class WindowObserver: ObservableObject {
     @Published
     internal private(set) var isKeyWindow: Bool = false {
         didSet {
+            guard let window = window else { return }
             guard isKeyWindow else {
+                self.appState?.didResignKey(window: window)
                 return
             }
-            self.appState?.values = self.values
+            self.appState?.didBecomeKey(window: window, values: values)
         }
     }
 
@@ -31,13 +33,19 @@ class WindowObserver: ObservableObject {
 
     private var becomeKeyObserver: NSObjectProtocol?
     private var resignKeyObserver: NSObjectProtocol?
-
-    var valueMap: [String: Any] = [:]
-
+    
+    #if canImport(AppKit)
+        private var willCloseObserver: NSObjectProtocol?
+    #endif
+    
     internal var values: KeyWindowValuesPreference = KeyWindowValuesPreference() {
         didSet {
-            guard self.isKeyWindow else { return }
-            self.appState?.values = self.values
+            guard let window = window else { return }
+            guard self.isKeyWindow else {
+                self.appState?.didResignKey(window: window)
+                return
+            }
+            self.appState?.didBecomeKey(window: window, values: values)
         }
     }
 
@@ -47,6 +55,9 @@ class WindowObserver: ObservableObject {
             guard let window = window else {
                 self.becomeKeyObserver = nil
                 self.resignKeyObserver = nil
+                #if canImport(AppKit)
+                    self.willCloseObserver = nil
+                #endif
                 return
             }
 
@@ -54,17 +65,27 @@ class WindowObserver: ObservableObject {
                 forName: Window.didBecomeKeyNotification,
                 object: window,
                 queue: .main
-            ) { (_) in
-                self.isKeyWindow = true
+            ) { [weak self] (_) in
+                self?.isKeyWindow = true
             }
 
             self.resignKeyObserver = NotificationCenter.default.addObserver(
                 forName: Window.didResignKeyNotification,
                 object: window,
                 queue: .main
-            ) { (_) in
-                self.isKeyWindow = false
+            ) { [weak self] (_) in
+                self?.isKeyWindow = false
             }
+            
+            #if canImport(AppKit)
+                self.willCloseObserver = NotificationCenter.default.addObserver(
+                    forName: Window.willCloseNotification,
+                    object: window,
+                    queue: .main
+                ) { [weak self] (_) in
+                    self?.isKeyWindow = false
+                }
+            #endif
         }
     }
 }
