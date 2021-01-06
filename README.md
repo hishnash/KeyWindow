@@ -60,3 +60,5 @@ struct MenuButton: View {
 You can can also use `@KeyWindowValue` and `@KeyWindowValueBinding` in your other views but be **careful to ensure they do not result in `.keyWindow` modifiers being re-called otherwise it is possible to get into a loop.** The best way to do this is to set all your `.keyWindow` high up in your view structor and only use `@KeyWindowValue` and `@KeyWindowValueBinding` on deeply nested child views.
 
 In addition this package also provides a `EnvironmentValues.isKeyWindow` that can be read to detect if the view is in the `key` window. (you might use this to change the style of rendering). Note this is not the same as `scenePhase`,  `scenePhase` indicates if the scene is `active` not if the window for the view is in the Key Window. On iPadOS and macOS you can have multiple scenes active and on macOS each Scene can have many windows but only one of them will be key at any given time.
+
+If you have a  `Binding<Optional<Value>>` that that you want to share through the `.keyWindow`  you can do this by using the `@KeyWindowOptionalValueBinding` wrapper.

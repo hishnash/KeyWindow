@@ -10,7 +10,7 @@ import Foundation
 /// A value that has a custom representation in `AnyEquatable`.
 ///
 /// `Self` should also conform to `Equatable`.
-protocol _HasCustomAnyEquatableRepresentation {
+public protocol _HasCustomAnyEquatableRepresentation {
   /// Returns a custom representation of `self` as `AnyEquatable`.
   /// If returns nil, the default representation is used.
   ///
@@ -31,7 +31,7 @@ protocol _HasCustomAnyEquatableRepresentation {
   ///         // Correct:
   ///         return AnyEquatable(customRepresentation as Base)
   ///       }
-  __consuming func _toCustomAnyEquatable() -> AnyEquatable?
+  __consuming func _toCustomAnyEquatable() -> AnyEquatable
 }
 
 @usableFromInline
@@ -96,23 +96,21 @@ internal struct _ConcreteEquatableBox<Base: Equatable>: _AnyEquatableBox {
 /// type-erased value so that instances wrapping the same value of either type
 /// compare as equal. For example, `AnyEquatable(42)` compares as equal to
 /// `AnyEquatable(42 as NSNumber)`.
-struct AnyEquatable {
+public struct AnyEquatable {
   internal var _box: _AnyEquatableBox
 
-  internal init(_box box: _AnyEquatableBox) {
-    self._box = box
-  }
+      internal init(_box box: _AnyEquatableBox) {
+        self._box = box
+      }
 
+    public init<H: _HasCustomAnyEquatableRepresentation>(_ base: H) {
+        self = base._toCustomAnyEquatable()
+    }
+    
   /// Creates a type-erased equatable value that wraps the given instance.
   ///
   /// - Parameter base: A equatable value to wrap.
-  init<H: Equatable>(_ base: H) {
-    if let custom =
-      (base as? _HasCustomAnyEquatableRepresentation)?._toCustomAnyEquatable() {
-      self = custom
-      return
-    }
-
+  public init<H: Equatable>(_ base: H) {
     self.init(_box: _ConcreteEquatableBox(base))
   }
 
@@ -130,7 +128,7 @@ struct AnyEquatable {
   ///         print(unwrappedMessage)
   ///     }
   ///     // Prints "Hello world!"
-  var base: Any {
+  public var base: Any {
     return _box._base
   }
 
@@ -179,25 +177,25 @@ extension AnyEquatable: Equatable {
   /// - Parameters:
   ///   - lhs: A type-erased equatable value.
   ///   - rhs: Another type-erased equatable value.
-  static func == (lhs: AnyEquatable, rhs: AnyEquatable) -> Bool {
+  public static func == (lhs: AnyEquatable, rhs: AnyEquatable) -> Bool {
     return lhs._box._canonicalBox._isEqual(to: rhs._box._canonicalBox) ?? false
   }
 }
 
 extension AnyEquatable: CustomStringConvertible {
-  var description: String {
+  public var description: String {
     return String(describing: base)
   }
 }
 
 extension AnyEquatable: CustomDebugStringConvertible {
-  var debugDescription: String {
+  public var debugDescription: String {
     return "AnyEquatable(" + String(reflecting: base) + ")"
   }
 }
 
 extension AnyEquatable: CustomReflectable {
-  var customMirror: Mirror {
+  public var customMirror: Mirror {
     Mirror(
       self,
       children: ["value": base]

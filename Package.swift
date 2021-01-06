@@ -18,6 +18,7 @@ let package = Package(
         .target(
             name: "KeyWindow",
             dependencies: []
-        )
+        ),
+        .testTarget(name: "KeyWindowTests", dependencies: ["KeyWindow"])
     ]
 )

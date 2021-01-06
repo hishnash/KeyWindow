@@ -11,28 +11,17 @@ import SwiftUI
 
 struct KeyWindowValuesPreference {
 
-    private var values: [String: AnyEquatable] = [:]
-
-    subscript<Key>(_ key: Key.Type) -> Key.Value? where Key: KeyWindowValueKey, Key.Value: Equatable {
-        get {
-            guard let value = self.values[String(reflecting: Key.self)]?.base as? Key.Value else {
-                return nil
-            }
-            return value
-        } set {
-            self.values[String(reflecting: Key.self)] = AnyEquatable(newValue)
-        }
-    }
+    private var values: [AnyKeyWindowValueKey: AnyEquatable] = [:]
 
     subscript<Key>(_ key: Key.Type) -> Key.Value? where Key: KeyWindowValueKey {
         get {
-            guard let value = self.values[String(reflecting: Key.self)]?.base as? NonEquitableWrapper else {
+            guard let value = self.values[AnyKeyWindowValueKey(key.self)] else {
                 return nil
             }
-            return value.base as? Key.Value
+            return key.fromAnyEquatable(value)
         } set {
             guard let newValue = newValue else { return }
-            self.values[String(reflecting: Key.self)] = AnyEquatable(NonEquitableWrapper(base: newValue))
+            self.values[AnyKeyWindowValueKey(key.self)] = key.toAnyEquatable(newValue)
         }
     }
 }

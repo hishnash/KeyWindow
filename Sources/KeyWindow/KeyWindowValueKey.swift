@@ -9,7 +9,31 @@ import SwiftUI
 
 public protocol KeyWindowValueKey {
     associatedtype Value
+    
+    static func toAnyEquatable(_ value: Value) ->  AnyEquatable
+    static func fromAnyEquatable(_ value: AnyEquatable) -> Value?
 }
+
+public extension KeyWindowValueKey where Value: Equatable {
+    static func toAnyEquatable(_ value: Value) ->  AnyEquatable {
+        AnyEquatable(value)
+    }
+    
+    static func fromAnyEquatable(_ value: AnyEquatable) -> Value? {
+        value.base as? Value
+    }
+}
+
+public extension KeyWindowValueKey {
+    static func toAnyEquatable(_ value: Value) ->  AnyEquatable {
+        AnyEquatable(NonEquitableWrapper(base: value))
+    }
+    
+    static func fromAnyEquatable(_ value: AnyEquatable) -> Value? {
+        (value.base as? NonEquitableWrapper)?.base as? Value
+    }
+}
+
 
 public extension View {
     func keyWindow<Key>(_ key: Key.Type, _ value: Key.Value) -> some View where Key: KeyWindowValueKey {
@@ -43,4 +67,45 @@ public extension View {
             existingValue[Value.self] = value
         }
     }
+}
+
+/// A type-erased `AnyKeyWindowValueKey`
+internal struct AnyKeyWindowValueKey {
+    /// The key's type represented erased to an `Any.Type`.
+    internal let keyType: Any.Type
+
+    internal init<Key>(_ keyType: Key.Type) where Key: KeyWindowValueKey {
+        self.keyType = keyType
+    }
+}
+
+extension AnyKeyWindowValueKey: Hashable {
+    static func == (lhs: AnyKeyWindowValueKey, rhs: AnyKeyWindowValueKey) -> Bool {
+        return ObjectIdentifier(lhs.keyType) == ObjectIdentifier(rhs.keyType)
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self.keyType))
+    }
+}
+
+extension AnyKeyWindowValueKey: CustomStringConvertible {
+  var description: String {
+    return String(describing: self.keyType.self)
+  }
+}
+
+extension AnyKeyWindowValueKey: CustomDebugStringConvertible {
+  var debugDescription: String {
+    return "AnyKeyWindowValueKey(" + String(reflecting: self.keyType.self) + ")"
+  }
+}
+
+extension AnyKeyWindowValueKey: CustomReflectable {
+  var customMirror: Mirror {
+    Mirror(
+        self,
+        children: ["value": self.keyType.self]
+    )
+  }
 }
