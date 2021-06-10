@@ -3,7 +3,9 @@
 This package provides a way to share values from the `key` window to all other parts of your application.  (the `key` window in macOS/iPadOS is the window that currently responds to keyboard shortcuts).
 
 
-The main use-case of this package is to make it possible to pass values from the `key` window to the `commands`  section in a swiftUI lifecycle application.  
+
+The main use-case of this package is to make it possible to pass values from the `key` window to views in the `commands` section of a SwiftUI lifecycle application.
+
 
 ```swift
 import KeyWindow
@@ -21,7 +23,9 @@ struct ExampleWindowReaderApp: App {
     }
 }
 ```
-Within our `ContentView` and its children we can publish values in a similar way to publishing Preferences. 
+**Notice** it is important to wrap the `ContentView` of your app with the `.observeWindow()` modifier, this enables `KeyWindow` to observe this window and the values it publishes.
+
+Within our `ContentView` and its children we can publish values in a similar way to publishing [Preferences](https://developer.apple.com/documentation/swiftui/preferencekey).
 
 First create a struct that conforms to `KeyWindowValueKey` and declare the value type.
 
@@ -57,8 +61,21 @@ struct MenuButton: View {
 }
 ```
 
-You can can also use `@KeyWindowValue` and `@KeyWindowValueBinding` in your other views but be **careful to ensure they do not result in `.keyWindow` modifiers being re-called otherwise it is possible to get into a loop.** The best way to do this is to set all your `.keyWindow` high up in your view structor and only use `@KeyWindowValue` and `@KeyWindowValueBinding` on deeply nested child views.
+**NOTE** you can't use `@KeyWindowValue` or `@KeyWindowValueBinding` in a `struct MyCommands: Commands` type. You need to extract the `Buttons` from the `Commands` body into their own Views so that you can use these property wrappers (this is a limitations of SwiftUI). 
+
+For a little more detail on  common pattern is to share the document from the key window so that is it accessible within the commands section [this blog post](https://lostmoa.com/blog/KeyWindowABetterWayOfExposingValuesFromTheKeyWindow/) covers this use-case. 
+
+You can also use `@KeyWindowValue` and `@KeyWindowValueBinding` in your other views but be **careful to ensure they do not result in `.keyWindow` modifiers being re-called otherwise it is possible to get into a loop.** The best way to do this is to set all your `.keyWindow` high up in your view hierarchy and only use `@KeyWindowValue` and `@KeyWindowValueBinding` on deeply nested child views.
 
 In addition this package also provides a `EnvironmentValues.isKeyWindow` that can be read to detect if the view is in the `key` window. (you might use this to change the style of rendering). Note this is not the same as `scenePhase`,  `scenePhase` indicates if the scene is `active` not if the window for the view is in the Key Window. On iPadOS and macOS you can have multiple scenes active and on macOS each Scene can have many windows but only one of them will be key at any given time.
 
-If you have a  `Binding<Optional<Value>>` that that you want to share through the `.keyWindow`  you can do this by using the `@KeyWindowOptionalValueBinding` wrapper.
+## Finding the correct property wrapper for your value type
+
+Depending on the data type you are trying to share from your key window there are a few different property wrappers you can use to read the value:
+
+| Type                           |      Property Wrapper          |  Comment                                                                                                          |
+|--------------------------------|:------------------------------:|------------------------------------------------------------------------------------------------------------------:|
+|`"String"` , `42` or  `MyStruct`|`@KeyWindowValue`               | For performance reasons it is best if these value types conform to equatable |
+|`Binding<MyStruct>`             |`@KeyWindowValueBinding`        |  -                                                                                                                |
+|`Binding<Optional<MyStruct>>`   |`@KeyWindowOptionalValueBinding`|  -                                                                                                                |
+|`Observable` Object             | `@KeyWindowObservableObject`   | The `Key` in this case needs to conform to `KeyWindowObservableObjectKey` and provide a `defaultValue`     |
