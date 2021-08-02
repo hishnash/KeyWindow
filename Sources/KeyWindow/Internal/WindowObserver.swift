@@ -88,4 +88,32 @@ class WindowObserver: ObservableObject {
             #endif
         }
     }
+    
+    /// Gets all notifications, unwraps them, then calls `removeObserver` on each of them.
+    /// Also sets all observers to nil.
+    private func removeAllObservers() {
+        var notifications = [
+            becomeKeyObserver,
+            resignKeyObserver,
+        ]
+        
+        #if canImport(AppKit)
+        notifications.append(willCloseObserver)
+        #endif
+        
+        notifications
+            .compactMap { $0 }
+            .forEach(NotificationCenter.default.removeObserver(_:))
+        
+        becomeKeyObserver = nil
+        resignKeyObserver = nil
+        
+        #if canImport(AppKit)
+        willCloseObserver = nil
+        #endif
+    }
+    
+    deinit {
+        removeAllObservers()
+    }
 }
