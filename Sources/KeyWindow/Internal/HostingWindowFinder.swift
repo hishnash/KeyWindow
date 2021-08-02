@@ -14,8 +14,10 @@ struct HostingWindowFinder: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        DispatchQueue.main.async { [weak view] in
-            self.callback(view?.window)
+        
+        let window = view.window
+        DispatchQueue.main.async { [weak window] in
+            self.callback(window)
         }
         return view
     }
@@ -29,8 +31,10 @@ struct HostingWindowFinder: NSViewRepresentable {
     func makeNSView(context: Self.Context) -> NSView {
         let view = NSView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        DispatchQueue.main.async { [weak view] in
-            self.callback(view?.window)
+        
+        let window = view.window
+        DispatchQueue.main.async { [weak window] in
+            self.callback(window)
         }
         return view
     }
