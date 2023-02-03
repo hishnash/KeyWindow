@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-internal class KeyWindowState: ObservableObject {
+public class KeyWindowState: ObservableObject {
     @Published
     var values = KeyWindowValuesPreference()
     
@@ -15,11 +15,11 @@ internal class KeyWindowState: ObservableObject {
 
     init () {}
     
-    subscript<Key>(_ key: Key.Type) -> Key.Value? where Key: KeyWindowValueKey {
+    public subscript<Key>(_ key: Key.Type) -> Key.Value? where Key: KeyWindowValueKey {
         self.values[key]
     }
     
-    static var shared: KeyWindowState = KeyWindowState()
+    public static var shared: KeyWindowState = KeyWindowState()
     
     internal func didBecomeKey(window: Window, values: KeyWindowValuesPreference) {
         self.window = window
